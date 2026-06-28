@@ -6,6 +6,10 @@
 <img height="480" alt="QQ20260629-032403" src="https://github.com/user-attachments/assets/c6ef13bf-ab6f-457a-b3ed-f44e8cc9b03a" />
 ---
 
+## 在线 Demo
+
+[点击这里打开在线 Demo](https://wangoushin.github.io/rep-timer/)
+
 ## 功能特点
 
 * 自定义保持秒数
