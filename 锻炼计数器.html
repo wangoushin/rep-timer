@@ -1,0 +1,757 @@
+<!--
+  Workout Timer
+
+  Copyright (c) 2026 wangoushin
+
+  Licensed under the MIT License.
+  You may use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of this software, subject to the conditions of
+  the MIT License.
+
+  Author: wangoushin
+-->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>锻炼计时器</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, "Microsoft YaHei", sans-serif;
+      background: #111827;
+      color: #f9fafb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 460px;
+      background: #1f2937;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    h1 {
+      margin: 0 0 20px;
+      text-align: center;
+      font-size: 26px;
+    }
+
+    .template-section {
+      margin-bottom: 20px;
+      padding: 14px;
+      border-radius: 16px;
+      background: #111827;
+    }
+
+    .template-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 10px;
+    }
+
+    .template-title {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .add-template {
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: none;
+      background: #2563eb;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .template-list {
+      max-height: 150px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .template-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 8px;
+      border-radius: 12px;
+      background: #1f2937;
+      margin-bottom: 8px;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+
+    .template-item.active {
+      border-color: #60a5fa;
+      background: #263449;
+    }
+
+    .template-name {
+      width: 100%;
+      margin: 0;
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+      background: #374151;
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .template-name:focus {
+      box-shadow: 0 0 0 2px #60a5fa;
+    }
+
+    .delete-template {
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: none;
+      background: #991b1b;
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .settings {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    label {
+      font-size: 14px;
+      color: #d1d5db;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      margin-top: 6px;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      font-size: 18px;
+      background: #374151;
+      color: #fff;
+      outline: none;
+    }
+
+    input {
+      text-align: center;
+    }
+
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+      font-size: 15px;
+      line-height: 1.5;
+      font-family: inherit;
+    }
+
+    input:focus,
+    textarea:focus {
+      box-shadow: 0 0 0 2px #60a5fa;
+    }
+
+    .note-area {
+      margin-bottom: 24px;
+    }
+
+    .display {
+      text-align: center;
+      padding: 30px 16px;
+      border-radius: 18px;
+      background: #111827;
+      margin-bottom: 20px;
+      transition: background 0.3s;
+    }
+
+    .display.hold {
+      background: #065f46;
+    }
+
+    .display.rest {
+      background: #7c2d12;
+    }
+
+    .display.finished {
+      background: #4c1d95;
+    }
+
+    .status {
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .time {
+      font-size: 76px;
+      font-weight: bold;
+      line-height: 1;
+    }
+
+    .progress {
+      margin-top: 18px;
+      font-size: 16px;
+      color: #d1d5db;
+      line-height: 1.8;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+    }
+
+    button {
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #fff;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .start {
+      background: #2563eb;
+    }
+
+    .pause {
+      background: #f59e0b;
+    }
+
+    .reset {
+      background: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>锻炼计时器</h1>
+
+    <div class="template-section">
+      <div class="template-header">
+        <div class="template-title">训练模板</div>
+        <button id="addTemplateBtn" class="add-template">追加模板</button>
+      </div>
+
+      <div id="templateList" class="template-list"></div>
+    </div>
+
+    <div class="settings">
+      <label>
+        保持秒数
+        <input id="holdSeconds" type="number" min="1" value="5" />
+      </label>
+
+      <label>
+        放松秒数
+        <input id="restSeconds" type="number" min="1" value="3" />
+      </label>
+
+      <label>
+        每组次数
+        <input id="reps" type="number" min="1" value="10" />
+      </label>
+
+      <label>
+        组数
+        <input id="sets" type="number" min="1" value="3" />
+      </label>
+    </div>
+
+    <div class="note-area">
+      <label>
+        备注
+        <textarea id="note" placeholder="例如：腹肌静态收缩，保持时注意呼吸，不要憋气。"></textarea>
+      </label>
+    </div>
+
+    <div id="display" class="display">
+      <div id="status" class="status">准备开始</div>
+      <div id="time" class="time">0</div>
+      <div class="progress">
+        <div id="setInfo">第 0 / 0 组</div>
+        <div id="repInfo">第 0 / 0 次</div>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button id="startBtn" class="start">开始</button>
+      <button id="pauseBtn" class="pause" disabled>暂停</button>
+      <button id="resetBtn" class="reset">重置</button>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "workout_timer_templates";
+
+    const holdInput = document.getElementById("holdSeconds");
+    const restInput = document.getElementById("restSeconds");
+    const repsInput = document.getElementById("reps");
+    const setsInput = document.getElementById("sets");
+    const noteInput = document.getElementById("note");
+
+    const templateListEl = document.getElementById("templateList");
+    const addTemplateBtn = document.getElementById("addTemplateBtn");
+
+    const display = document.getElementById("display");
+    const statusEl = document.getElementById("status");
+    const timeEl = document.getElementById("time");
+    const setInfoEl = document.getElementById("setInfo");
+    const repInfoEl = document.getElementById("repInfo");
+
+    const startBtn = document.getElementById("startBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const resetBtn = document.getElementById("resetBtn");
+
+    let appData = {
+      activeTemplateId: "",
+      templates: []
+    };
+
+    let holdSeconds = 5;
+    let restSeconds = 3;
+    let totalReps = 10;
+    let totalSets = 3;
+
+    let currentSet = 1;
+    let currentRep = 1;
+    let phase = "hold";
+    let remainingSeconds = 0;
+
+    let timerId = null;
+    let isRunning = false;
+    let isStarted = false;
+
+    function createDefaultTemplate(name = "腹肌训练") {
+      return {
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        name,
+        holdSeconds: 5,
+        restSeconds: 3,
+        reps: 10,
+        sets: 3,
+        note: ""
+      };
+    }
+
+    function getActiveTemplate() {
+      return appData.templates.find(
+        (template) => template.id === appData.activeTemplateId
+      );
+    }
+
+    function loadAppData() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+
+      if (!raw) {
+        const defaultTemplate = createDefaultTemplate();
+
+        appData = {
+          activeTemplateId: defaultTemplate.id,
+          templates: [defaultTemplate]
+        };
+
+        saveAppData();
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(raw);
+
+        if (!Array.isArray(parsed.templates) || parsed.templates.length === 0) {
+          throw new Error("templates is empty");
+        }
+
+        appData = parsed;
+
+        const activeTemplate = getActiveTemplate();
+
+        if (!activeTemplate) {
+          appData.activeTemplateId = appData.templates[0].id;
+        }
+      } catch (error) {
+        console.warn("读取 localStorage 失败，已使用默认模板。", error);
+
+        const defaultTemplate = createDefaultTemplate();
+
+        appData = {
+          activeTemplateId: defaultTemplate.id,
+          templates: [defaultTemplate]
+        };
+
+        saveAppData();
+      }
+    }
+
+    function saveAppData() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+    }
+
+    function renderTemplateList() {
+      templateListEl.innerHTML = "";
+
+      appData.templates.forEach((template) => {
+        const item = document.createElement("div");
+        item.className = "template-item";
+
+        if (template.id === appData.activeTemplateId) {
+          item.classList.add("active");
+        }
+
+        const nameInput = document.createElement("input");
+        nameInput.className = "template-name";
+        nameInput.value = template.name;
+        nameInput.placeholder = "模板名称";
+
+        nameInput.addEventListener("click", (event) => {
+          event.stopPropagation();
+        });
+
+        nameInput.addEventListener("input", () => {
+          template.name = nameInput.value.trim() || "未命名模板";
+          saveAppData();
+        });
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "delete-template";
+        deleteBtn.textContent = "删除";
+
+        deleteBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          deleteTemplate(template.id);
+        });
+
+        item.addEventListener("click", () => {
+          switchTemplate(template.id);
+        });
+
+        item.appendChild(nameInput);
+        item.appendChild(deleteBtn);
+
+        templateListEl.appendChild(item);
+      });
+    }
+
+    function applyTemplateToForm(template) {
+      holdInput.value = template.holdSeconds;
+      restInput.value = template.restSeconds;
+      repsInput.value = template.reps;
+      setsInput.value = template.sets;
+      noteInput.value = template.note || "";
+
+      readSettings();
+      updateDisplay();
+    }
+
+    function saveCurrentFormToActiveTemplate() {
+      const template = getActiveTemplate();
+
+      if (!template) return;
+
+      template.holdSeconds = Math.max(1, Number(holdInput.value) || 5);
+      template.restSeconds = Math.max(1, Number(restInput.value) || 3);
+      template.reps = Math.max(1, Number(repsInput.value) || 10);
+      template.sets = Math.max(1, Number(setsInput.value) || 3);
+      template.note = noteInput.value;
+
+      saveAppData();
+    }
+
+    function addTemplate() {
+      if (isStarted) {
+        alert("训练进行中不能追加模板，请先重置。");
+        return;
+      }
+
+      saveCurrentFormToActiveTemplate();
+
+      const templateNumber = appData.templates.length + 1;
+      const newTemplate = createDefaultTemplate(`训练模板 ${templateNumber}`);
+
+      appData.templates.push(newTemplate);
+      appData.activeTemplateId = newTemplate.id;
+
+      saveAppData();
+      renderTemplateList();
+      applyTemplateToForm(newTemplate);
+    }
+
+    function deleteTemplate(templateId) {
+      if (isStarted) {
+        alert("训练进行中不能删除模板，请先重置。");
+        return;
+      }
+
+      if (appData.templates.length <= 1) {
+        alert("至少需要保留一个模板。");
+        return;
+      }
+
+      const deleteIndex = appData.templates.findIndex(
+        (template) => template.id === templateId
+      );
+
+      if (deleteIndex === -1) return;
+
+      const isDeletingActiveTemplate = templateId === appData.activeTemplateId;
+
+      appData.templates.splice(deleteIndex, 1);
+
+      if (isDeletingActiveTemplate) {
+        const nextTemplate =
+          appData.templates[deleteIndex] || appData.templates[deleteIndex - 1];
+
+        appData.activeTemplateId = nextTemplate.id;
+        applyTemplateToForm(nextTemplate);
+      }
+
+      saveAppData();
+      renderTemplateList();
+    }
+
+    function switchTemplate(templateId) {
+      if (templateId === appData.activeTemplateId) return;
+
+      if (isStarted) {
+        alert("训练进行中不能切换模板，请先重置。");
+        return;
+      }
+
+      saveCurrentFormToActiveTemplate();
+
+      appData.activeTemplateId = templateId;
+
+      const template = getActiveTemplate();
+
+      if (!template) return;
+
+      saveAppData();
+      renderTemplateList();
+      applyTemplateToForm(template);
+    }
+
+    function readSettings() {
+      holdSeconds = Math.max(1, Number(holdInput.value) || 5);
+      restSeconds = Math.max(1, Number(restInput.value) || 3);
+      totalReps = Math.max(1, Number(repsInput.value) || 10);
+      totalSets = Math.max(1, Number(setsInput.value) || 3);
+    }
+
+    function lockSettings(locked) {
+      holdInput.disabled = locked;
+      restInput.disabled = locked;
+      repsInput.disabled = locked;
+      setsInput.disabled = locked;
+
+      addTemplateBtn.disabled = locked;
+
+      const deleteButtons = document.querySelectorAll(".delete-template");
+      deleteButtons.forEach((button) => {
+        button.disabled = locked;
+      });
+
+      // 备注训练中也允许修改
+      noteInput.disabled = false;
+    }
+
+    function updateDisplay() {
+      timeEl.textContent = remainingSeconds;
+
+      setInfoEl.textContent = `第 ${currentSet} / ${totalSets} 组`;
+      repInfoEl.textContent = `第 ${currentRep} / ${totalReps} 次`;
+
+      display.classList.remove("hold", "rest", "finished");
+
+      if (!isStarted) {
+        statusEl.textContent = "准备开始";
+        timeEl.textContent = "0";
+        setInfoEl.textContent = `第 0 / ${totalSets} 组`;
+        repInfoEl.textContent = `第 0 / ${totalReps} 次`;
+        return;
+      }
+
+      if (phase === "hold") {
+        statusEl.textContent = "保持";
+        display.classList.add("hold");
+      } else {
+        statusEl.textContent = "放松";
+        display.classList.add("rest");
+      }
+    }
+
+    function startTimer() {
+      if (!isStarted) {
+        saveCurrentFormToActiveTemplate();
+        readSettings();
+
+        currentSet = 1;
+        currentRep = 1;
+        phase = "hold";
+        remainingSeconds = holdSeconds;
+
+        isStarted = true;
+        lockSettings(true);
+      }
+
+      if (isRunning) return;
+
+      isRunning = true;
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+      pauseBtn.textContent = "暂停";
+
+      updateDisplay();
+
+      timerId = setInterval(() => {
+        remainingSeconds--;
+
+        if (remainingSeconds <= 0) {
+          nextStep();
+        }
+
+        updateDisplay();
+      }, 1000);
+    }
+
+    function nextStep() {
+      if (phase === "hold") {
+        phase = "rest";
+        remainingSeconds = restSeconds;
+        return;
+      }
+
+      if (currentRep < totalReps) {
+        currentRep++;
+        phase = "hold";
+        remainingSeconds = holdSeconds;
+        return;
+      }
+
+      if (currentSet < totalSets) {
+        currentSet++;
+        currentRep = 1;
+        phase = "hold";
+        remainingSeconds = holdSeconds;
+        return;
+      }
+
+      finishTimer();
+    }
+
+    function pauseTimer() {
+      if (!isRunning) {
+        startTimer();
+        return;
+      }
+
+      clearInterval(timerId);
+      timerId = null;
+      isRunning = false;
+
+      startBtn.disabled = false;
+      pauseBtn.textContent = "继续";
+    }
+
+    function resetTimer() {
+      clearInterval(timerId);
+      timerId = null;
+
+      isRunning = false;
+      isStarted = false;
+
+      currentSet = 1;
+      currentRep = 1;
+      phase = "hold";
+      remainingSeconds = 0;
+
+      lockSettings(false);
+
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      pauseBtn.textContent = "暂停";
+
+      saveCurrentFormToActiveTemplate();
+      readSettings();
+      updateDisplay();
+      renderTemplateList();
+    }
+
+    function finishTimer() {
+      clearInterval(timerId);
+      timerId = null;
+
+      isRunning = false;
+      isStarted = false;
+
+      display.classList.remove("hold", "rest");
+      display.classList.add("finished");
+
+      statusEl.textContent = "训练完成";
+      timeEl.textContent = "✓";
+      setInfoEl.textContent = `共完成 ${totalSets} 组`;
+      repInfoEl.textContent = `每组 ${totalReps} 次`;
+
+      startBtn.disabled = true;
+      pauseBtn.disabled = true;
+      lockSettings(false);
+    }
+
+    const settingInputs = [
+      holdInput,
+      restInput,
+      repsInput,
+      setsInput,
+      noteInput
+    ];
+
+    settingInputs.forEach((input) => {
+      input.addEventListener("input", () => {
+        saveCurrentFormToActiveTemplate();
+
+        if (!isStarted) {
+          readSettings();
+          updateDisplay();
+        }
+      });
+    });
+
+    addTemplateBtn.addEventListener("click", addTemplate);
+    startBtn.addEventListener("click", startTimer);
+    pauseBtn.addEventListener("click", pauseTimer);
+    resetBtn.addEventListener("click", resetTimer);
+
+    loadAppData();
+    renderTemplateList();
+
+    const activeTemplate = getActiveTemplate();
+    applyTemplateToForm(activeTemplate);
+  </script>
+</body>
+</html>
